@@ -1,9 +1,3 @@
 __pycache__/
-*.pyc
-*.pth
-*.npz
-*.mp4
-*.gif
-!results/.gitkeep
 data/
 .DS_Store
