@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pth
+*.npz
+*.mp4
+*.gif
+results/
+!results/.gitkeep
+data/
+.DS_Store
