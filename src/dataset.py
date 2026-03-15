@@ -1,7 +1,7 @@
-"""Dataset loading and ray sampling for NeRF training.
+"""Dataset loading and ray sampling 
 
-- load_nerf_dataset: Load pre-processed .npz dataset files.
-- RaysData: Efficient random ray sampling across multiple views for training.
+- load_nerf_dataset: Load pre-processed .npz dataset files
+- RaysData: Efficient random ray sampling across multiple views for training
 """
 
 import torch
@@ -12,17 +12,12 @@ from .rays import pixel_to_ray
 
 
 def load_nerf_dataset(
-    path: str, split: str = "train"
+    path: str, split: str = "train" # 'train', 'val', 'test', 'train+val'.
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Load a NeRF dataset from .npz file.
-
-        Args:
-        path: Path to the .npz file (containing images_train, images_val, c2ws_train, c2ws_val, c2ws_test, focal)
-        split: 'train', 'val', 'test', 'train+val'.
-
+    """
     Returns:
-        For train/val: (images, c2ws, K) where images are float32 in [0, 1].
-        For test: (c2ws, K).
+        For train/val: (images, c2ws, K) where images are float32 in [0, 1]
+        For test: (c2ws, K)
     """
     data = np.load(path)
 
@@ -51,14 +46,8 @@ def load_nerf_dataset(
 
 
 class RaysData:
-    """Random ray sampler for NeRF training.
-    Pre-computes a pixel coordinate grid and samples random rays across
-    all training views during each training iteration.
-
-    Args:
-        images: Training images (N, H, W, 3) as numpy or tensor.
-        K: Intrinsic matrix (3, 3).
-        c2ws: Camera-to-world matrices (N, 4, 4).
+    """Random ray sampler for NeRF training, pre-computes a pixel coordinate grid and 
+    samples random rays across all training views during each training iteration.
     """
 
     def __init__(self, images, K, c2ws):
@@ -74,7 +63,7 @@ class RaysData:
         self.K = K
         self.c2ws = c2ws
 
-        # Pre-compute pixel center grid: each entry is [u + 0.5, v + 0.5]
+        # pre-compute pixel center grid: each entry is [u + 0.5, v + 0.5]
         i, j = torch.meshgrid(
             torch.arange(self.H, dtype=torch.float32),
             torch.arange(self.W, dtype=torch.float32),
@@ -85,16 +74,16 @@ class RaysData:
     def sample_rays(
         self, n_rays: int, image_idx: int | None = None
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Sample random rays with their ground-truth RGB values.
+        """sample random rays with their ground-truth RGB values
 
         Args:
-            n_rays: Number of rays to sample.
-            image_idx: If given, sample only from this image.
+            n_rays: # rays to sample
+            image_idx: If given, sample only from this image
 
         Returns:
-            rays_o: Ray origins (n_rays, 3).
-            rays_d: Normalized ray directions (n_rays, 3).
-            pixels: Ground-truth RGB (n_rays, 3).
+            rays_o: Ray origins (n_rays, 3)
+            rays_d: Normalized ray directions (n_rays, 3)
+            pixels: Ground-truth RGB (n_rays, 3)
         """
         if image_idx is not None:
             image_ids = torch.full((n_rays,), image_idx, dtype=torch.long)
@@ -114,15 +103,15 @@ class RaysData:
     def get_all_rays_for_image(
         self, img_idx: int
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Get rays for every pixel in a single image (for rendering).
+        """get rays for every pixel in a single image (for rendering)
 
         Args:
-            img_idx: Index of the image.
+            img_idx: Index of the image
 
         Returns:
-            rays_o: Ray origins (H*W, 3).
-            rays_d: Ray directions (H*W, 3).
-            target_rgb: Ground-truth colors (H*W, 3).
+            rays_o: Ray origins (H*W, 3)
+            rays_d: Ray directions (H*W, 3)
+            target_rgb: Ground-truth colors (H*W, 3)
         """
         uv = self.uv_grid.reshape(-1, 2)
         c2w = self.c2ws[img_idx]

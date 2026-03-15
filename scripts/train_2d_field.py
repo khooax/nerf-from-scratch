@@ -1,8 +1,4 @@
-"""Train a 2D neural image field and run hyperparameter ablation.
-
-Usage:
-    python scripts/train_2d_field.py --image photo.png
-    python scripts/train_2d_field.py --image photo.png --grid_search
+"""Train a 2D neural image field and run hyperparameter ablation
 """
 
 import argparse

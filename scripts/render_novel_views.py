@@ -1,8 +1,4 @@
-"""Render novel views from a trained NeRF model.
-
-Usage:
-    python scripts/render_novel_views.py --checkpoint results/nerf/model.pth \
-        --dataset lego_200x200.npz --output novel_views.mp4
+"""Render novel views from a trained NeRF model
 """
 
 import argparse
@@ -29,19 +25,19 @@ def render(args):
     K = torch.from_numpy(K).float()
     c2ws_test = torch.from_numpy(c2ws_test).float()
 
-    # Infer image size from training set
+    # infer image size from training set
     images_train, _, _ = load_nerf_dataset(args.dataset, "train")
     H, W = images_train.shape[1:3]
     del images_train
 
-    # Load model
+    # load model
     model = NeRF_MLP(
         L_coord=args.L_coord, L_dir=args.L_dir, hidden_dim=args.hidden_dim
     ).to(device)
     model.load_state_dict(torch.load(args.checkpoint, map_location=device))
     model.eval()
 
-    # Render each test view
+    # render each test view
     frames = []
     i_grid, j_grid = torch.meshgrid(
         torch.arange(H, dtype=torch.float32),

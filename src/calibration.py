@@ -1,9 +1,9 @@
-"""Camera calibration and pose estimation using ArUco markers.
+"""Camera calibration and pose estimation using ArUco 
 
 Pipeline:
-1. Detect ArUco markers in calibration images → estimate intrinsics (K)
-2. Detect markers in scene images → solve PnP → estimate camera poses (c2w)
-3. Undistort images using estimated distortion coefficients
+1. Detect ArUco markers → est intrinsics (K)
+2. Detect markers in scene imgs → solve PnP → est camera poses (c2w)
+3. Undistort imgs using estimated distortion coefficients
 """
 
 import cv2
@@ -21,14 +21,14 @@ def create_aruco_detector():
 
 
 def get_tag_world_coords(tag_size_m: float) -> np.ndarray:
-    """get 3D world coordinates for the 4 corners of an ArUco tag.  
+    """get 3D world coords for the 4 corners of an ArUco tag.  
     assumes the tag lies in z=0 plane with origin at top-left
 
     Args:
         tag_size_m: Physical size of the tag in meters.
 
     Returns:
-        Corner coordinates (4, 3) in meters.
+        Corner coords (4, 3) in meters.
     """
     return np.array(
         [[0, 0, 0], [tag_size_m, 0, 0], [tag_size_m, tag_size_m, 0], [0, tag_size_m, 0]],
@@ -41,8 +41,8 @@ def calibrate_camera(
     tag_size_m: float = 0.06,
     pattern: str = "*.jpg",
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Calibrate camera intrinsics from images of ArUco markers. 
-    Detects ArUco markers in all images, extracts 2D-3D correspondences,
+    """calibrate camera intrinsics from images of ArUco markers. 
+    detects ArUco markers in all images, extracts 2D-3D correspondences,
     and runs OpenCV's camera calibration.
 
     Args:
@@ -92,10 +92,9 @@ def estimate_poses(
     tag_size_m: float = 0.06,
     pattern: str = "*.jpg",
 ) -> List[Dict]:
-    """Estimate camera-to-world poses for each image using PnP.
+    """estimate camera-to-world poses for each image using PnP.
 
     Args:
-        image_folder: Directory with scene images containing ArUco markers.
         camera_matrix: Intrinsic matrix K.
         dist_coeffs: Distortion coefficients.
         tag_size_m: Physical tag size in meters.
@@ -185,10 +184,10 @@ def prepare_dataset(
     dist_coeffs: np.ndarray,
     output_file: str = "dataset.npz",
     train_ratio: float = 0.8,
-    val_ratio: float = 0.1,
-    target_size: Tuple[int, int] = (200, 200),
+    val_ratio: float = 0.1,                     
+    target_size: Tuple[int, int] = (200, 200),  # (width, height) to resize images to.
 ) -> Dict:
-    """Undistort, resize, and split images into train/val/test.
+    """undistort, resize, and split images into train/val/test.
 
     Args:
         poses: List of pose dicts from estimate_poses.
@@ -212,7 +211,7 @@ def prepare_dataset(
         h_crop, w_crop = undistorted.shape[:2]
         resized = cv2.resize(undistorted, target_size, interpolation=cv2.INTER_AREA)
 
-        # Scale intrinsics for resize
+        # scale intrinsics for resize
         scaled_K = new_K.copy()
         scaled_K[0, :] *= target_w / w_crop
         scaled_K[1, :] *= target_h / h_crop
@@ -225,7 +224,7 @@ def prepare_dataset(
     c2ws = np.array(c2ws, dtype=np.float32)
     focal = float(np.mean(focals))
 
-    # Train/val/test split
+    # train/val/test split
     n = len(images)
     n_train = int(n * train_ratio)
     n_val = int(n * val_ratio)

@@ -1,11 +1,5 @@
 """Volume rendering for Neural Radiance Fields.
-
-Implements the classical volume rendering equation from NeRF:
-    C(r) = Σ T_i · α_i · c_i
-
-where T_i is the accumulated transmittance and α_i = 1 - exp(-σ_i · δ_i).
-
-Also handles point sampling along rays with stratified sampling.
++ point sampling along rays with stratified sampling
 """
 
 import torch
@@ -21,13 +15,13 @@ def vol_rendering(
     t_vals: torch.Tensor,
     ray_d: torch.Tensor,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Apply volume rendering to per-sample colors and densities.
+    """apply vol rendering to per-sample colors and densities.
 
     Args:
-        pts_rgb: Sample colors (N_rays, N_samples, 3).
+        pts_rgb: Sample colors (N_rays, N_samples, 3)
         pts_density: Sample densities (N_rays, N_samples, 1).
-        t_vals: Sample distances along rays (N_rays, N_samples).
-        ray_d: Ray directions (N_rays, 3), used for distance scaling.
+        t_vals: Sample distances along rays (N_rays, N_samples)
+        ray_d: Ray directions (N_rays, 3), used for distance scaling
 
     Returns:
         rays_rgb: Rendered pixel colors (N_rays, 3).
@@ -76,19 +70,14 @@ def render_rays(
     n_samples: int = 64,
     device: str = "cuda",
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Sample points along rays, query the NeRF, and volume-render.
-
-    Uses stratified sampling: divides [near, far] into n_samples bins and
-    draws one random sample per bin during training (uniform during eval).
+    """sample points along rays, query the NeRF, and volume-render w stratified sampling
 
     Args:
-        model: NeRF_MLP model.
-        rays_o: Ray origins (N_rays, 3).
-        rays_d: Normalized ray directions (N_rays, 3).
-        near: Near clipping distance.
-        far: Far clipping distance.
-        n_samples: Number of samples per ray.
-        device: Torch device.
+        rays_o: Ray origins (N_rays, 3)
+        rays_d: Normalized ray directions (N_rays, 3)
+        near: Near clipping distance
+        far: Far clipping distance
+        n_samples: # samples per ray
 
     Returns:
         rays_rgb: Rendered colors (N_rays, 3).
@@ -134,19 +123,19 @@ def render_full_image(
     far: float = 6.0,
     device: str = "cuda",
 ) -> torch.Tensor:
-    """Render all rays for a complete image, processing in chunks.
+    """render all rays for a complete image, processing in chunks
 
     Args:
-        model: NeRF_MLP model.
-        rays_o: All ray origins (H*W, 3).
-        rays_d: All ray directions (H*W, 3).
-        chunk_size: Rays per forward pass (limits GPU memory usage).
-        near: Near plane.
-        far: Far plane.
-        device: Torch device.
+        model: NeRF_MLP model
+        rays_o: All ray origins (H*W, 3)
+        rays_d: All ray directions (H*W, 3)
+        chunk_size: Rays per forward pass (limits GPU memory usage)
+        near: Near plane
+        far: Far plane
+        device: Torch device
 
     Returns:
-        Rendered RGB values (H*W, 3) on CPU.
+        Rendered RGB values (H*W, 3)  
     """
     rays_o = rays_o.to(device)
     rays_d = rays_d.to(device)

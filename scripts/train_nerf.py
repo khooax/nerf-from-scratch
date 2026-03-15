@@ -1,8 +1,4 @@
-"""Training script for NeRF.
-
-Usage:
-    python scripts/train_nerf.py --config configs/lego.yaml
-    python scripts/train_nerf.py --dataset lego_200x200.npz --near 2.0 --far 6.0
+"""Training script for NeRF
 """
 
 import argparse
@@ -27,13 +23,13 @@ def train(args):
     save_dir = Path(args.save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load data
+    # load data
     images_train, c2ws_train, K = load_nerf_dataset(args.dataset, "train")
     images_val, c2ws_val, _ = load_nerf_dataset(args.dataset, "val")
     train_data = RaysData(images_train, K, c2ws_train)
     val_data = RaysData(images_val, K, c2ws_val)
 
-    # Model
+    # model
     model = NeRF_MLP(
         L_coord=args.L_coord, L_dir=args.L_dir, hidden_dim=args.hidden_dim
     ).to(device)
@@ -45,7 +41,7 @@ def train(args):
     print(f"Training: {args.num_iters} iters, batch_size={args.batch_size}, lr={args.lr}")
     print(f"Rendering: near={args.near}, far={args.far}")
 
-    # Training loop
+    # training loop
     train_losses = []
     val_psnrs = []
     checkpoint_iters = set([200, 400, 600, 800, 1000] + [args.num_iters])
@@ -68,7 +64,7 @@ def train(args):
             psnr = -10.0 * np.log10(loss.item())
             print(f"[{it:5d}/{args.num_iters}] loss={loss.item():.6f}  PSNR={psnr:.1f} dB")
 
-        # Validation + checkpoint
+        # validation + checkpoint
         if it in checkpoint_iters:
             model.eval()
             val_psnr = evaluate(model, val_data, args.near, args.far, device)
@@ -78,7 +74,7 @@ def train(args):
             save_render(model, val_data, 0, save_dir / f"val_{it:05d}.png",
                         args.near, args.far, device)
 
-    # Save model and plots
+    # save model and plots
     torch.save(model.state_dict(), save_dir / "model.pth")
     plot_curves(train_losses, val_psnrs, save_dir / "training_curves.png")
     print(f"\nDone. Results saved to {save_dir}/")

@@ -1,8 +1,7 @@
-"""2D Neural Image Field: fitting an MLP to represent a single image.
+"""2D Neural Image Field 
 
-Maps 2D pixel coordinates (x, y) → RGB color (r, g, b) using sinusoidal
-positional encoding and a 4-layer MLP. This serves as a simpler precursor
-to the full 3D Neural Radiance Field.
+- map 2D pixel coords (x, y) → RGB color (r, g, b) using sinusoidal PE and a 4-layer MLP; 
+- simpler precursor to full 3D NERF
 """
 
 import torch
@@ -15,15 +14,15 @@ from .positional_encoding import SinusoidalPE
 
 
 class ImageMLP(nn.Module):
-    """MLP that maps encoded 2D coordinates to RGB colors.
+    """maps encoded 2D coords to RGB colors
 
     Architecture:
         PE(x,y) → Linear(256) → ReLU → Linear(256) → ReLU →
         Linear(256) → ReLU → Linear(3) → Sigmoid
 
     Args:
-        L: Number of positional encoding frequency levels.
-        hidden_dim: Width of hidden layers.
+        L: # positional encoding frequency levels
+        hidden_dim: Width of hidden layers
     """
 
     def __init__(self, L: int = 10, hidden_dim: int = 256):
@@ -43,10 +42,10 @@ class ImageMLP(nn.Module):
         )
 
     def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Predict RGB for given pixel coordinates.
+        """predict RGB for given pixel coords
 
         Args:
-            coords: Normalized pixel coordinates (N, 2) in [0, 1].
+            coords: Normalized pixel coords (N, 2) in [0, 1]
 
         Returns:
             RGB colors (N, 3) in [0, 1].
@@ -55,9 +54,8 @@ class ImageMLP(nn.Module):
 
 
 class PixelDataset(Dataset):
-    """Dataset of (coordinate, color) pairs from an image.
-
-    Normalizes pixel coordinates to [0, 1] and RGB values to [0, 1].
+    """dataset of (coordinate, color) pairs from an image, 
+    normalizes pixel coords to [0, 1] and RGB values to [0, 1]
 
     Args:
         image_path: Path to the input image.
@@ -86,13 +84,12 @@ class PixelDataset(Dataset):
 def reconstruct_image(
     model: ImageMLP, dataset: PixelDataset, device: torch.device, batch_size: int = 100000
 ) -> np.ndarray:
-    """Reconstruct full image by querying the model at every pixel.
+    """reconstruct full image by querying  model at every pixel
 
     Args:
-        model: Trained ImageMLP.
-        dataset: PixelDataset with coordinate grid.
-        device: Torch device.
-        batch_size: Number of pixels to process at once.
+        dataset: PixelDataset with coordinate grid
+        device: Torch device
+        batch_size: # pixels to process at once
 
     Returns:
         Reconstructed image as (H, W, 3) numpy array in [0, 1].

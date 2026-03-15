@@ -1,22 +1,18 @@
-"""Ray generation from camera parameters.
-
-Implements the projection pipeline:
-    pixel (u, v) → camera coords → world coords → ray (origin, direction)
-
-Supports both single-camera and batched multi-camera operations.
+"""Ray generation from camera parameters
+- pixel (u, v) → camera coords → world coords → ray (origin, direction)
 """
 
 import torch
 from typing import Tuple
 
 def transform_points(c2w: torch.Tensor, xc: torch.Tensor) -> torch.Tensor:
-    """Transform 3D points from camera to world coordinates.
+    """transform 3D points from camera to world coords
 
     Args:
-        c2w: Camera-to-world matrix, (4, 4) or (N, 4, 4).
-        xc: Points in camera space, (N, 3).
+        c2w: Camera-to-world matrix, (4, 4) or (N, 4, 4)
+        xc: Points in camera space, (N, 3)
     Returns:
-        Points in world space, (N, 3).
+        Points in world space, (N, 3)
     """
     xch = torch.cat([xc, torch.ones_like(xc[..., :1])], dim=-1)
 
@@ -31,17 +27,17 @@ def transform_points(c2w: torch.Tensor, xc: torch.Tensor) -> torch.Tensor:
 def pixel_to_camera(
     K: torch.Tensor, uv: torch.Tensor, s: torch.Tensor | float
 ) -> torch.Tensor:
-    """Convert pixels to camera-space 3D points at a given depth w inverse pinhole camera model
+    """convert pixels to camera-space 3D points at a given depth w inverse pinhole camera model
         x = (u - cx) / fx * s
         y = (v - cy) / fy * s
         z = s
 
     Args:
-        K: Intrinsic matrix (3, 3).
-        uv: Pixel coordinates (N, 2).
-        s: Depth values — scalar, (N,), or (N, 1).
+        K: Intrinsic matrix (3, 3)
+        uv: Pixel coords (N, 2)
+        s: Depth values — scalar, (N,), or (N, 1)
     Returns:
-        Camera-space 3D points (N, 3).
+        Camera-space 3D points (N, 3)
     """
     if isinstance(s, (int, float)):
         s = torch.ones(uv.shape[0], 1) * s
@@ -62,17 +58,17 @@ def pixel_to_camera(
 def pixel_to_ray(
     K: torch.Tensor, c2w: torch.Tensor, uv: torch.Tensor
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Convert pixel coordinates to rays by projecting each pixel to depth=1 in camera space
+    """convert pixel coords to rays by projecting each pixel to depth=1 in camera space
     transforming to world space, then computing the normalized direction from camera origin
 
     Args:
-        K: Intrinsic matrix (3, 3).
-        c2w: Camera-to-world matrix, (4, 4) or (N, 4, 4) for batched cameras.
-        uv: Pixel coordinates (N, 2).
+        K: Intrinsic matrix (3, 3)
+        c2w: Camera-to-world matrix, (4, 4) or (N, 4, 4) for batched cameras
+        uv: Pixel coords (N, 2)
 
     Returns:
-        ray_o: Ray origins — (3,) for single camera, (N, 3) for batched.
-        ray_d: Normalized ray directions (N, 3).
+        ray_o: Ray origins — (3,) for single camera, (N, 3) for batched
+        ray_d: Normalized ray directions (N, 3)
     """
     xc = pixel_to_camera(K, uv, s=1.0)
     xw = transform_points(c2w, xc)
