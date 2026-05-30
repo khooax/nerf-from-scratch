@@ -1,31 +1,27 @@
 # Neural Radiance Fields from Scratch
 
-This project implements an end-to-end NeRF pipeline from scratch in PyTorch. The pipeline goes from camera calibration to pose estimation via PnP, neural scene representation, and finally novel view synthesis. 
+This project implements from scratch an end-to-end NeRF pipeline (camera calibration → pose estimation → neural scene representation → novel view synthesis). 
 
-<img src="results/3d_field/viser.png" alt="Lego Viser" style="width:50%;">
+**What is NeRF**:
+NeRF represents a scene as a continuous function learned by a neural network. The function maps any 3D coordinate and viewing direction to a colour and density. Given a handful of 2D photos, NeRF synthesises photorealistic novel views from any angle — complete with accurate lighting and reflections — producing smooth fly-through videos as if a real 3D scene existed.
 
-My blog article on what NeRF is and how training works:
+My deep dive article about NeRF:
 https://khooanxian.medium.com/nerf-turning-photos-into-3d-6e5de0b6cb9e 
 
-**TLDR**:
-NeRF represents a scene as a continuous function learnt by a neural network. The function maps any given 3D coordinate and viewing direction to a color and density. With NeRF, you can take a handful of 2D photos of a scene and synthesise novel views from any angle with photorealistic lighting and reflections. This allows us to produce smooth videos as if a real 3D scene existed!
+<img src="results/3d_field/viser.png" alt="Lego Viser" style="width:50%;">
 
 ## Pipeline
 
 ```
 Raw Images + ArUco Tags
     │
-    ├── 1. Camera Calibration and Pose Estimation ──→ Intrinsics (K) + Distortion Coeffs
-    │
-    ├── 2. Pose Estimation ─────→ Camera-to-World Matrices (c2w)
-    │
-    ├── 3. Dataset Preparation ─→ Undistorted images + train/val/test split
-    │
-    ├── 4. NeRF Training ───────→ MLP learns σ(x,y,z) and c(x,y,z,d)
-    │
-    └── 5. Novel View Rendering ─→ Volume rendering from new camera poses
+    ├── 1. Camera Calibration ──────→ Intrinsics (K) + Distortion Coefficients
+    ├── 2. Pose Estimation ─────────→ Camera-to-World Matrices (c2w)
+    ├── 3. Dataset Preparation ─────→ Undistorted images + train/val/test split
+    ├── 4. NeRF Training ───────────→ MLP learns σ(x,y,z) and c(x,y,z,θ,φ)
+    └── 5. Novel View Rendering ────→ Volume rendering from new camera poses
 ```
-Expanding on the NeRF Training step: 
+NeRF Training (step 4) in detail: 
 1. Volumetric Ray Casting: For each pixel in the target view, a camera ray is cast through the 3D space. Multiple 3D points (x,y,z) are sampled along each ray. 
 2. Neural Network Inference: For each sampled point, query the neural network to predict the RGB color and density at that point. 
 3. Volume Rendering: The predicted colors and densities are integrated along the ray, collapsing the 3D data back into a single 2D pixel value
@@ -33,41 +29,46 @@ Expanding on the NeRF Training step:
 
 ## Architecture
 
-**NeRF MLP** (following [Mildenhall et al., 2020](https://arxiv.org/abs/2003.08934)):
+**NeRF MLP** (based on [Mildenhall et al., 2020](https://arxiv.org/abs/2003.08934)):
 
-- **Positional encoding**: Sinusoidal PE with L=10 for coordinates, L=4 for directions
-- **Coordinate branch**: 8 layers (256-dim) with a skip connection at layer 5
-- **Density head**: Position-only → σ (ReLU activation, non-negative)
-- **Color head**: Position features + view direction → RGB (Sigmoid, view-dependent)
-- **Volume rendering**: Stratified sampling with alpha compositing and white background
+| Component | Details |
+|---|---|
+| **Positional encoding** | Sinusoidal PE — L=10 for (x,y,z), L=4 for viewing direction |
+| **Coordinate branch** | 8 fully-connected layers (256-dim) with skip connection at layer 5 |
+| **Density head** | Position-only → σ via ReLU (non-negative by construction) |
+| **Colour head** | Position features + view direction → RGB via Sigmoid |
+| **Volume rendering** | Stratified sampling, alpha compositing, white background |
+
 
 ## Results
 
 ### Novel View Synthesis
 
-Trained on ~100 images, the model learns a continuous 3D scene representation and renders novel views (PSNR: 25.2 dB):
+Trained on ~100 images. The model learns a continuous 3D scene representation and renders novel views at **25.2 dB PSNR**.
 
-![Lego Novel Views](results/3d_field/lego_novel_view.gif)
+![Novel Views GIF](results/3d_field/lego_novel_view.gif)
 
-Progression in novel view reconstruction quality across training iterations: 
+**Reconstruction quality across training iterations:**
 
-![3D Field Progression](results/3d_field/3dprogression.png) 
+![3D Progression](results/3d_field/3dprogression.png)
 
-Training curve: 
+**Training loss curve:**
 
 ![Training Curve](results/3d_field/loss.png)
 
+---
+
 ### 2D Neural Field Fitting
 
-Before tackling 3D, an MLP learns to map (x, y) → RGB for a single image. Reconstruction quality improves with training:
+As a simpler baseline, an MLP learns to map pixel coordinates (x, y) → RGB for a single image.
 
-![2D Field Progression](results/2d_field/2dprogression.png) 
+![2D Progression](results/2d_field/2dprogression.png)
 
-### Hyperparameter Ablation
-
-Positional encoding frequency L and network width jointly determine reconstruction quality. Low frequencies cannot capture fine detail; narrow networks lack capacity:
+**Hyperparameter ablation** — positional encoding frequency L and network width jointly determine reconstruction quality. Low frequencies miss fine detail; narrow networks lack capacity:
 
 ![Ablation Grid](results/2d_field/ablation_grid.png)
+
+---
 
 ## Quick Start Command Lines
 
