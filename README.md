@@ -1,6 +1,6 @@
 # Neural Radiance Fields from Scratch
 
-End-to-end NeRF pipeline built from scratch in PyTorch with camera calibration with ArUco markers → pose estimation via PnP → neural scene representation → novel view synthesis
+This project implements an end-to-end NeRF pipeline from scratch in PyTorch. The pipeline goes from camera calibration to pose estimation via PnP, neural scene representation, and finally novel view synthesis. 
 
 <img src="results/3d_field/viser.png" alt="Lego Viser" style="width:50%;">
 
@@ -9,34 +9,6 @@ https://khooanxian.medium.com/nerf-turning-photos-into-3d-6e5de0b6cb9e
 
 **TLDR**:
 NeRF represents a scene as a continuous function learnt by a neural network. The function maps any given 3D coordinate and viewing direction to a color and density. With NeRF, you can take a handful of 2D photos of a scene and synthesise novel views from any angle with photorealistic lighting and reflections. This allows us to produce smooth videos as if a real 3D scene existed!
-
-## Results
-
-### Novel View Synthesis
-
-Trained on ~100 images, the model learns a continuous 3D scene representation and renders novel views (PSNR: 25.2 dB):
-
-![Lego Novel Views](results/3d_field/lego_novel_view.gif)
-
-Progression in novel view reconstruction quality across training iterations: 
-
-![3D Field Progression](results/3d_field/3dprogression.png) 
-
-Training curve: 
-
-![Training Curve](results/3d_field/loss.png)
-
-### 2D Neural Field Fitting
-
-Before tackling 3D, an MLP learns to map (x, y) → RGB for a single image. Reconstruction quality improves with training:
-
-![2D Field Progression](results/2d_field/2dprogression.png) 
-
-### Hyperparameter Ablation
-
-Positional encoding frequency L and network width jointly determine reconstruction quality. Low frequencies cannot capture fine detail; narrow networks lack capacity:
-
-![Ablation Grid](results/2d_field/ablation_grid.png)
 
 ## Pipeline
 
@@ -68,6 +40,34 @@ Expanding on the NeRF Training step:
 - **Density head**: Position-only → σ (ReLU activation, non-negative)
 - **Color head**: Position features + view direction → RGB (Sigmoid, view-dependent)
 - **Volume rendering**: Stratified sampling with alpha compositing and white background
+
+## Results
+
+### Novel View Synthesis
+
+Trained on ~100 images, the model learns a continuous 3D scene representation and renders novel views (PSNR: 25.2 dB):
+
+![Lego Novel Views](results/3d_field/lego_novel_view.gif)
+
+Progression in novel view reconstruction quality across training iterations: 
+
+![3D Field Progression](results/3d_field/3dprogression.png) 
+
+Training curve: 
+
+![Training Curve](results/3d_field/loss.png)
+
+### 2D Neural Field Fitting
+
+Before tackling 3D, an MLP learns to map (x, y) → RGB for a single image. Reconstruction quality improves with training:
+
+![2D Field Progression](results/2d_field/2dprogression.png) 
+
+### Hyperparameter Ablation
+
+Positional encoding frequency L and network width jointly determine reconstruction quality. Low frequencies cannot capture fine detail; narrow networks lack capacity:
+
+![Ablation Grid](results/2d_field/ablation_grid.png)
 
 ## Quick Start Command Lines
 
